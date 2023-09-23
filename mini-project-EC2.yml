@@ -1,0 +1,78 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: CreateSetup an Apache on a Linux EC2 instance in us-west-2 region using SampleNetworkCrossStack reference
+
+Parameters:
+  # ImageIdSelect: 
+  #   Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+  #   Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+  InstanceTypeSelect:
+    Description: Enter EC2 instance type
+    Type: String
+    Default: "t2.micro"
+  KeyNameSelect:
+    Description: Select an existing key pair for SSH access to the EC2 onstance
+    Type: AWS::EC2::KeyPair::KeyName
+  StackName:
+    Description: Enter Stack Name (It has default value)
+    Type: String
+    Default: mini-Project-EC2-Webserver
+
+Mappings:
+  RegionToAMI:
+    us-east-1:
+      AMI: ami-00c6177f250e07ec1
+    us-west-1:
+      AMI: ami-02daa508cbc334270
+    us-west-2:
+      AMI: ami-038937b3d6616035f
+
+Resources:
+  MyEC2Instance: 
+    Type: AWS::EC2::Instance
+    Properties:
+      # ImageId: !Ref ImageIdSelect
+      ImageId: !FindInMap [RegionToAMI, !Ref 'AWS::Region', AMI]
+      InstanceType: !Ref InstanceTypeSelect
+      KeyName: !Ref KeyNameSelect
+      SubnetId: !ImportValue SampleNetworkCrossStack-SubnetID
+      Tags: 
+        - Key: "Name"
+          Value: "MourtadaEC2"
+      SecurityGroupIds: # Don't use SecurityGroup here, use SecurityGroupIds
+        - !ImportValue
+            SampleNetworkCrossStack-SecurityGroupID
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y httpd
+          systemctl start httpd
+          systemctl enable httpd
+          echo "<html><body><h1>My First WebPage by Mourtada in ${AWS::Region}<h1></body></html>" > /var/www/html/index.html
+  MyEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref MyEC2Instance
+Outputs:
+  # InstancePubIp: #Ip provided at first 54.203.23.185
+  #   Description: IP of the new instance
+  #   Value: !GetAtt MyEC2Instance.PublicIp # Make sure to use PublicIp
+  #   Export:
+  #     Name: !Sub '${AWS::StackName}-MyInstanceIp'
+  InstancePrivIp:
+    Description: Private IP of the new instance
+    Value: !GetAtt MyEC2Instance.PrivateIp
+    Export:
+      Name: !Sub '${AWS::StackName}-MyInstancePrivIp'
+
+  # InstancePrivateDNS:
+  #   Description: DNS name of the new instance
+  #   Value: !GetAtt MyEC2Instance.PrivateDnsName
+
+  InstancePuplicDNS:
+    Description: Public DNS of the new instance
+    Value: !GetAtt MyEC2Instance.PublicDnsName
+    Export:
+      Name: !Sub ${AWS::StackName}-MyInstancePubDns
+
