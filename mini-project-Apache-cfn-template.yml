@@ -1,9 +1,9 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
-Description: CreateSetup an Apache on a Linux EC2 instance in us-west-2 region using SampleNetworkCrossStack reference
+Description: Setup an Apache on a Linux EC2 instance in us-west-2 region using SampleNetworkCrossStack reference
 
 Parameters:
-  # ImageIdSelect: 
+  # ImageIdSelect:
   #   Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
   #   Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
   InstanceTypeSelect:
